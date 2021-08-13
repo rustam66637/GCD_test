@@ -9,8 +9,8 @@ import UIKit
 
 class SecondViewController: UIViewController {
     
-    
     @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var indicator: UIActivityIndicatorView!
     
     fileprivate var imageURL: URL?
     fileprivate var image: UIImage? {
@@ -18,6 +18,8 @@ class SecondViewController: UIViewController {
             return imageView.image
         }
         set {
+            indicator.startAnimating()
+            indicator.isHidden = true
             imageView.image = newValue
             imageView.sizeToFit()
         }
@@ -30,20 +32,17 @@ class SecondViewController: UIViewController {
     
     fileprivate func fetchImage() {
         imageURL = URL(string: "https://static.wikia.nocookie.net/naruto/images/d/dd/Naruto_Uzumaki%21%21.png")
-        
-        guard let url = imageURL, let imageData = try? Data(contentsOf: url) else { return }
-        self.image = UIImage(data: imageData)
+        //индикатор крутится - лавэха мутится
+        indicator.isHidden = false
+        indicator.startAnimating()
+        //используем очередь с приоритетом utility
+        let queue = DispatchQueue.global(qos: .utility)
+        queue.async {
+            guard let url = self.imageURL, let imageData = try? Data(contentsOf: url) else { return }
+            //интерфейс должен быть в соновном потоке
+            DispatchQueue.main.async {
+                self.image = UIImage(data: imageData)
+            }
+        }
     }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
